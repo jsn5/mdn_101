@@ -25,10 +25,10 @@
 
 <h4>Projects that use MDN</h4>
 <ul>
-	<li>A Neural Representation of Sketch Drawings(sketch-rnn) by David Ha and Douglas Eck, |<a href="https://arxiv.org/abs/1704.03477">Paper</a>, <a href="https://magenta.tensorflow.org/assets/sketch_rnn_demo/index.html">Web demo</a></li>
-	<li>World Models by David Ha & Jürgen Schmidhuber |<a href="https://arxiv.org/abs/1803.10122">Paper</a>, <a href="http://worldmodels.github.io">Web demo</a></li>
-	<li>Robojam: A Mixture Density RNN for generating musical touchscreen interactions. |<a href="https://github.com/cpmpercussion/robojam">Code</a></li>
-	<li>Dancenet by me :) |<a href="http://github.com/jsn5/dancenet">code</a></li>
+	<li>A Neural Representation of Sketch Drawings(sketch-rnn) by David Ha and Douglas Eck, <a href="https://arxiv.org/abs/1704.03477">Paper</a>, <a href="https://magenta.tensorflow.org/assets/sketch_rnn_demo/index.html">Web demo</a></li>
+	<li>World Models by David Ha & Jürgen Schmidhuber <a href="https://arxiv.org/abs/1803.10122">Paper</a>, <a href="http://worldmodels.github.io">Web demo</a></li>
+	<li>Robojam: A Mixture Density RNN for generating musical touchscreen interactions. <a href="https://github.com/cpmpercussion/robojam">Code</a></li>
+	<li>Dancenet by me :) <a href="http://github.com/jsn5/dancenet">code</a></li>
 </ul>
 
 

@@ -2,8 +2,8 @@
 <h3>Introduction to Mixture density Networks</h3>
 
 
-<h4>Original paper by C. Bishop (1994)</h4>
-<a href="#"></a>
+<h4>Original <a href="https://publications.aston.ac.uk/id/eprint/373/1/NCRG_94_004.pdf">paper</a>
+ by Christopher M. Bishop (1994)</h4>
 
 <h4>Video lectures by Charles Martin</h4>
 

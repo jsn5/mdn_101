@@ -152,57 +152,60 @@
         
         /* Code blocks for math breakdown */
         .code-breakdown {
-            background: #1e1e1e;
-            border-radius: 12px;
+            background: #fafafa;
+            border: 1px solid var(--border);
+            border-radius: 8px;
             margin: 32px 0;
             overflow: hidden;
         }
         .code-breakdown-header {
-            background: #2d2d2d;
-            padding: 12px 20px;
+            background: #f5f4f2;
+            padding: 10px 20px;
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
-            gap: 12px;
+            justify-content: space-between;
         }
-        .code-breakdown-header .dots {
-            display: flex;
-            gap: 6px;
-        }
-        .code-breakdown-header .dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-        .code-breakdown-header .dot.red { background: #ff5f56; }
-        .code-breakdown-header .dot.yellow { background: #ffbd2e; }
-        .code-breakdown-header .dot.green { background: #27ca40; }
         .code-breakdown-header .title {
             font-family: 'JetBrains Mono', monospace;
             font-size: 12px;
-            color: #888;
-            margin-left: 8px;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.02em;
+        }
+        .code-breakdown-header .lang {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: var(--accent-light);
+            padding: 3px 8px;
+            border-radius: 4px;
         }
         .code-breakdown pre {
             margin: 0;
-            padding: 24px;
+            padding: 24px 24px 28px;
             overflow-x: auto;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 14px;
-            line-height: 1.8;
-            color: #d4d4d4;
+            font-size: 13px;
+            line-height: 2;
+            color: #37352f;
+            background: transparent;
         }
-        .code-breakdown .comment { color: #6a9955; }
-        .code-breakdown .keyword { color: #569cd6; }
-        .code-breakdown .function { color: #dcdcaa; }
-        .code-breakdown .number { color: #b5cea8; }
-        .code-breakdown .string { color: #ce9178; }
-        .code-breakdown .variable { color: #9cdcfe; }
-        .code-breakdown .operator { color: #d4d4d4; }
+        .code-breakdown .comment { color: #6b7280; font-style: italic; }
+        .code-breakdown .keyword { color: #9333ea; }
+        .code-breakdown .function { color: var(--accent); }
+        .code-breakdown .number { color: #0891b2; }
+        .code-breakdown .string { color: #16a34a; }
+        .code-breakdown .variable { color: #1e40af; }
+        .code-breakdown .operator { color: #37352f; }
         .code-breakdown .highlight-line {
-            background: rgba(255, 255, 255, 0.05);
+            background: linear-gradient(90deg, var(--accent-light) 0%, rgba(244,235,232,0) 100%);
             display: block;
-            margin: 0 -24px;
-            padding: 0 24px;
+            margin: 4px -24px;
+            padding: 4px 24px;
+            border-left: 3px solid var(--accent);
         }
         
         /* Math to code transition */
@@ -381,18 +384,18 @@
         <header>
             <span class="tag">Deep Learning · Uncertainty · Code-First</span>
             <h1>Mixture Density Networks</h1>
-            <p class="subtitle">Breaking down scary math into code: so you can actually build it</p>
+            <p class="subtitle">Why standard regression collapses on inverse problems</p>
         </header>
 
         <article>
-            <p>Standard neural networks predict a single output for each input. This works beautifully for most regression problems, but breaks completely when you try to <em>invert</em> a function. Let's see why, and how <strong>Mixture Density Networks</strong> solve it.</p>
+            <p>Standard neural networks predict a single output for a given input. That assumption is rarely questioned until you try to invert a function.</p>
             
-            <p>Don't worry if the math looks intimidating. We'll break every formula down into simple code you can follow.</p>
+            <p>This tutorial shows exactly where and why that assumption breaks, and how Mixture Density Networks (MDNs) fix it by modeling distributions, not point estimates.</p>
 
             <h2>Part 1: The Forward Problem</h2>
-            <p class="step-indicator">Where standard regression works</p>
+            <p class="step-indicator">Everything works</p>
             
-            <p>Consider a simple nonlinear function with some noise:</p>
+            <p>Start with a function that is slightly nonlinear but well-behaved:</p>
 
             <div class="equation-block">
                 <span class="equation-label">Forward Function</span>
@@ -402,7 +405,7 @@
                 </div>
             </div>
 
-            <p>For each value of $x$, there's essentially one corresponding $y$ value (plus small noise). The conditional distribution $p(y|x)$ is <strong>unimodal</strong>: it has a single peak.</p>
+            <p>For each input $x$, there is essentially one valid output $y$, up to noise. That means $p(y|x)$ is <strong>unimodal</strong>, the conditional mean $\mathbb{E}[y|x]$ is meaningful, and mean-squared error (MSE) is a valid objective.</p>
 
             <div class="visualization">
                 <div class="viz-header">
@@ -426,30 +429,30 @@
             </div>
 
             <div class="callout success">
-                <div class="callout-title">Success!</div>
-                <p style="margin-bottom: 0;">The MLP fits this data perfectly. MSE loss works because there's only one "correct" $y$ for each $x$. The model learns the conditional mean $\mathbb{E}[y|x]$, which in the unimodal case passes directly through the data.</p>
+                <div class="callout-title">Result</div>
+                <p style="margin-bottom: 0;">A plain MLP trained with MSE converges cleanly. Nothing surprising. The network learns the conditional mean $\mathbb{E}[y|x]$, which happens to coincide with the function here.</p>
             </div>
 
             <div class="divider"></div>
 
             <h2>Part 2: The Inverse Problem</h2>
-            <p class="step-indicator">Where standard regression fails</p>
+            <p class="step-indicator">Where it breaks</p>
 
-            <p>Now let's <strong>invert the problem</strong>: swap $x$ and $y$, and try to predict the original $x$ from $y$.</p>
+            <p>Now swap the axes. Same data. Same points. Different question:</p>
 
             <div class="equation-block">
                 <span class="equation-label">The Inversion</span>
                 $$\text{Forward: } y = f(x) \quad \longrightarrow \quad \text{Inverse: } x = f^{-1}(y)$$
                 <div class="equation-explanation">
-                    Same data, axes swapped. We now ask: <em>"Given $y$, what was $x$?"</em>
+                    Given $y$, what was $x$? This is no longer a well-posed regression problem.
                 </div>
             </div>
 
-            <p>But look what happens to the data distribution:</p>
+            <p>Because the forward function is non-monotonic, multiple $x$ values map to the same $y$. So now $p(x|y)$ is <strong>multi-modal</strong>, there is no single correct answer, and the conditional mean lies between valid solutions.</p>
 
             <div class="visualization">
                 <div class="viz-header">
-                    <span class="viz-title">Inverse Problem: x = f⁻¹(y)  (Same Data, Axes Swapped)</span>
+                    <span class="viz-title">Inverse Problem: x = f⁻¹(y)</span>
                     <div class="legend">
                         <div class="legend-item"><div class="legend-dot" style="background: rgba(26,26,26,0.5);"></div><span>Data</span></div>
                         <div class="legend-item"><div class="legend-line" style="background: var(--accent);"></div><span>MLP prediction</span></div>
@@ -469,168 +472,96 @@
             </div>
 
             <div class="callout">
-                <div class="callout-title">Failure! But Why?</div>
-                <p style="margin-bottom: 0;">The MLP converges to a curve through the <em>middle</em> of the data, missing all three branches. This isn't a lack of model capacity; it's fundamental to MSE loss. The model finds $\mathbb{E}[x|y]$, the conditional mean, which for multi-modal data lies <em>between</em> the modes.</p>
+                <div class="callout-title">Result</div>
+                <p style="margin-bottom: 0;">The MLP produces $\hat{x}(y) = \mathbb{E}[x|y]$, a curve that passes through empty space. This is not underfitting. This is not lack of capacity. This is a <strong>loss-model mismatch</strong>.</p>
             </div>
 
-            <h3>Why Inversion Creates Multi-Modality</h3>
+            <h3>Why This Is a Fundamental Failure</h3>
             
-            <p>The forward function $y = x + 0.3\sin(2\pi x)$ is non-monotonic: it "wiggles." This means multiple $x$ values can produce similar $y$ values. When we invert, a single $y$ input now corresponds to <em>multiple valid</em> $x$ outputs.</p>
+            <p>MSE implicitly assumes: one correct target per input, symmetric penalties around that target, and a unimodal conditional distribution. Inverse problems violate all three.</p>
 
             <div class="callout blue">
-                <div class="callout-title">The Core Insight</div>
-                <p style="margin-bottom: 0;">Inverse problems naturally create multi-modal conditionals. This happens in robotics (inverse kinematics), physics (inferring causes from effects), and anywhere you invert a non-injective function. The challenge isn't model capacity; it's that MSE loss assumes a unimodal target.</p>
+                <div class="callout-title">This shows up everywhere</div>
+                <p style="margin-bottom: 0;">Inverse kinematics (multiple joint configurations), vision (depth ambiguity), physics (cause from effect), control and planning. If your data has multiple valid outputs, point regression is the wrong abstraction.</p>
             </div>
 
             <div class="divider"></div>
 
-            <h2>Part 3: The Solution: Mixture Density Networks</h2>
-            <p class="step-indicator">Output distributions, not point estimates</p>
+            <h2>Part 3: What MDNs Change</h2>
+            <p class="step-indicator">And what they don't</p>
 
-            <p>Christopher Bishop introduced MDNs in 1994. Instead of predicting a single value, the network outputs <em>parameters of a probability distribution</em>: a mixture of Gaussians that can have multiple peaks.</p>
+            <p>Mixture Density Networks do not make the network more powerful. They change what the network is allowed to represent. Instead of predicting a value, the network predicts parameters of a conditional distribution.</p>
 
-            <h3>The Scary Formula</h3>
+            <h3>The Formula</h3>
             
-            <p>Here's the math you'll see in papers. Don't panic. We'll break it down:</p>
+            <p>This is what you'll see in papers:</p>
             
             <div class="equation-block hero">
                 <span class="equation-label">Gaussian Mixture Model</span>
                 $$p(x \mid y) = \sum_{k=1}^{K} \pi_k(y) \cdot \mathcal{N}\big(x \mid \mu_k(y), \sigma_k(y)\big)$$
             </div>
 
-            <p>Looks intimidating? Let's translate it piece by piece into code:</p>
+            <p>Each input $y$ produces K candidate solutions. Each solution has a probability mass. The model is free to represent multiple modes. This is just a Gaussian mixture whose parameters are functions of the input.</p>
+            
+            <p>The summation symbol scares people unnecessarily. It's just a loop:</p>
 
             <div class="code-breakdown">
-                <div class="code-breakdown-header">
-                    <div class="dots">
-                        <div class="dot red"></div>
-                        <div class="dot yellow"></div>
-                        <div class="dot green"></div>
-                    </div>
-                    <span class="title">gmm_probability.py: breaking down the formula</span>
-                </div>
-<pre><span class="comment"># The formula: p(x|y) = Σ πₖ(y) · N(x | μₖ(y), σₖ(y))</span>
-<span class="comment"># Translation: "probability of x is a weighted sum of Gaussians"</span>
-
-<span class="keyword">def</span> <span class="function">gmm_probability</span>(<span class="variable">x</span>, <span class="variable">y</span>, <span class="variable">network</span>):
-    <span class="comment"># Step 1: Network outputs parameters (all depend on input y)</span>
-    <span class="variable">pi</span>, <span class="variable">mu</span>, <span class="variable">sigma</span> = <span class="variable">network</span>.<span class="function">forward</span>(<span class="variable">y</span>)
-    <span class="comment"># pi    = [π₁, π₂, π₃]     → mixing weights (sum to 1)</span>
-    <span class="comment"># mu    = [μ₁, μ₂, μ₃]     → centers of each Gaussian</span>
-    <span class="comment"># sigma = [σ₁, σ₂, σ₃]     → spread of each Gaussian</span>
-    
-<span class="highlight-line">    <span class="comment"># Step 2: The big sum: just a for loop!</span></span>
-<span class="highlight-line">    <span class="variable">total_probability</span> = <span class="number">0</span></span>
-<span class="highlight-line">    <span class="keyword">for</span> <span class="variable">k</span> <span class="keyword">in</span> <span class="function">range</span>(<span class="variable">K</span>):  <span class="comment"># K = number of Gaussians (e.g., 3)</span></span>
-<span class="highlight-line">        <span class="variable">weight</span> = <span class="variable">pi</span>[<span class="variable">k</span>]                        <span class="comment"># πₖ: how important is this Gaussian?</span></span>
-<span class="highlight-line">        <span class="variable">gaussian</span> = <span class="function">normal_pdf</span>(<span class="variable">x</span>, <span class="variable">mu</span>[<span class="variable">k</span>], <span class="variable">sigma</span>[<span class="variable">k</span>])  <span class="comment"># N(x|μₖ,σₖ): probability under this Gaussian</span></span>
-<span class="highlight-line">        <span class="variable">total_probability</span> += <span class="variable">weight</span> * <span class="variable">gaussian</span>   <span class="comment"># Add weighted contribution</span></span>
-    
-    <span class="keyword">return</span> <span class="variable">total_probability</span>
-
-<span class="comment"># That's it! The scary Σ is just a for loop.</span>
-<span class="comment"># The scary N(x|μ,σ) is just the bell curve formula.</span></pre>
+                <div class="code-breakdown-header"><span class="title">gmm_probability.py</span><span class="lang">python</span></div>
+<pre><span class="keyword">def</span> <span class="function">gmm_probability</span>(<span class="variable">x</span>, <span class="variable">y</span>, <span class="variable">network</span>):
+    <span class="variable">pi</span>, <span class="variable">mu</span>, <span class="variable">sigma</span> = <span class="variable">network</span>.<span class="function">forward</span>(<span class="variable">y</span>)   <span class="comment"># Get mixture params from network</span>
+<span class="highlight-line">    <span class="variable">total</span> = <span class="number">0</span></span>
+<span class="highlight-line">    <span class="keyword">for</span> <span class="variable">k</span> <span class="keyword">in</span> <span class="function">range</span>(<span class="variable">K</span>):                      <span class="comment"># Σ is just a for loop</span></span>
+<span class="highlight-line">        <span class="variable">total</span> += <span class="variable">pi</span>[<span class="variable">k</span>] * <span class="function">normal_pdf</span>(<span class="variable">x</span>, <span class="variable">mu</span>[<span class="variable">k</span>], <span class="variable">sigma</span>[<span class="variable">k</span>])</span>
+    <span class="keyword">return</span> <span class="variable">total</span></pre>
             </div>
 
             <h3>The Gaussian (Bell Curve)</h3>
-            <p>The $\mathcal{N}(x \mid \mu, \sigma)$ part is just the familiar bell curve:</p>
+            <p>The $\mathcal{N}(x \mid \mu, \sigma)$ term is the standard normal density:</p>
 
             <div class="code-breakdown">
-                <div class="code-breakdown-header">
-                    <div class="dots">
-                        <div class="dot red"></div>
-                        <div class="dot yellow"></div>
-                        <div class="dot green"></div>
-                    </div>
-                    <span class="title">gaussian.py: the bell curve</span>
-                </div>
-<pre><span class="comment"># N(x | μ, σ) = the probability density at point x</span>
-<span class="comment"># for a Gaussian centered at μ with spread σ</span>
-
-<span class="keyword">def</span> <span class="function">normal_pdf</span>(<span class="variable">x</span>, <span class="variable">mu</span>, <span class="variable">sigma</span>):
-    <span class="variable">z</span> = (<span class="variable">x</span> - <span class="variable">mu</span>) / <span class="variable">sigma</span>              <span class="comment"># How many std devs from center?</span>
-    <span class="keyword">return</span> <span class="function">exp</span>(-<span class="number">0.5</span> * <span class="variable">z</span>**<span class="number">2</span>) / (<span class="variable">sigma</span> * <span class="function">sqrt</span>(<span class="number">2</span> * <span class="variable">pi</span>))
-
-<span class="comment"># Close to μ → high probability</span>
-<span class="comment"># Far from μ → low probability</span></pre>
+                <div class="code-breakdown-header"><span class="title">gaussian.py</span><span class="lang">python</span></div>
+<pre><span class="keyword">def</span> <span class="function">normal_pdf</span>(<span class="variable">x</span>, <span class="variable">mu</span>, <span class="variable">sigma</span>):
+    <span class="variable">z</span> = (<span class="variable">x</span> - <span class="variable">mu</span>) / <span class="variable">sigma</span>
+    <span class="keyword">return</span> <span class="function">exp</span>(-<span class="number">0.5</span> * <span class="variable">z</span>**<span class="number">2</span>) / (<span class="variable">sigma</span> * <span class="function">sqrt</span>(<span class="number">2</span> * <span class="variable">pi</span>))</pre>
             </div>
 
-            <h3>Network Outputs → Valid Parameters</h3>
-            <p>The network outputs raw numbers. We transform them to be valid probability parameters:</p>
+            <h3>Output Transformations</h3>
+            <p>The network outputs raw numbers. We transform them into valid probability parameters:</p>
 
             <div class="code-breakdown">
-                <div class="code-breakdown-header">
-                    <div class="dots">
-                        <div class="dot red"></div>
-                        <div class="dot yellow"></div>
-                        <div class="dot green"></div>
-                    </div>
-                    <span class="title">transform_outputs.py: making outputs valid</span>
-                </div>
-<pre><span class="keyword">def</span> <span class="function">transform_outputs</span>(<span class="variable">raw_output</span>):
-    <span class="comment"># Network gives us 9 raw numbers (for K=3)</span>
-    <span class="comment"># We split them into 3 groups of 3:</span>
-    <span class="variable">z_pi</span>    = <span class="variable">raw_output</span>[<span class="number">0</span>:<span class="number">3</span>]   <span class="comment"># Will become mixing weights</span>
-    <span class="variable">z_mu</span>    = <span class="variable">raw_output</span>[<span class="number">3</span>:<span class="number">6</span>]   <span class="comment"># Will become means</span>
-    <span class="variable">z_sigma</span> = <span class="variable">raw_output</span>[<span class="number">6</span>:<span class="number">9</span>]   <span class="comment"># Will become std devs</span>
-    
-<span class="highlight-line">    <span class="comment"># Transform each to be valid:</span></span>
-<span class="highlight-line">    <span class="variable">pi</span>    = <span class="function">softmax</span>(<span class="variable">z_pi</span>)       <span class="comment"># Weights must sum to 1  →  use softmax</span></span>
-<span class="highlight-line">    <span class="variable">mu</span>    = <span class="variable">z_mu</span>                 <span class="comment"># Means can be anything   →  no transform</span></span>
-<span class="highlight-line">    <span class="variable">sigma</span> = <span class="function">exp</span>(<span class="variable">z_sigma</span>)        <span class="comment"># Std dev must be > 0     →  use exp</span></span>
-    
-    <span class="keyword">return</span> <span class="variable">pi</span>, <span class="variable">mu</span>, <span class="variable">sigma</span>
-
-<span class="comment"># softmax([2, 1, 0]) → [0.67, 0.24, 0.09]  (sums to 1!)</span>
-<span class="comment"># exp(-2) → 0.14  (always positive!)</span></pre>
+                <div class="code-breakdown-header"><span class="title">transform_outputs.py</span><span class="lang">python</span></div>
+<pre><span class="keyword">def</span> <span class="function">transform_outputs</span>(<span class="variable">raw</span>):
+    <span class="variable">z_pi</span>, <span class="variable">z_mu</span>, <span class="variable">z_sigma</span> = <span class="variable">raw</span>[<span class="number">0</span>:<span class="number">3</span>], <span class="variable">raw</span>[<span class="number">3</span>:<span class="number">6</span>], <span class="variable">raw</span>[<span class="number">6</span>:<span class="number">9</span>]
+<span class="highlight-line">    <span class="variable">pi</span>    = <span class="function">softmax</span>(<span class="variable">z_pi</span>)    <span class="comment"># Must sum to 1</span></span>
+<span class="highlight-line">    <span class="variable">mu</span>    = <span class="variable">z_mu</span>              <span class="comment"># Unconstrained</span></span>
+<span class="highlight-line">    <span class="variable">sigma</span> = <span class="function">exp</span>(<span class="variable">z_sigma</span>)     <span class="comment"># Must be > 0</span></span>
+    <span class="keyword">return</span> <span class="variable">pi</span>, <span class="variable">mu</span>, <span class="variable">sigma</span></pre>
             </div>
 
-            <h3>The Loss Function</h3>
+            <h3>Why the Loss Function Matters More Than the Architecture</h3>
 
-            <p>Training uses negative log-likelihood. Another scary formula:</p>
+            <p>MDNs are trained with negative log-likelihood:</p>
             
             <div class="equation-block">
                 <span class="equation-label">Loss Function</span>
                 $$\mathcal{L} = -\frac{1}{N}\sum_{i=1}^{N} \log \left( \sum_{k=1}^{K} \pi_k \cdot \mathcal{N}(x_i \mid \mu_k, \sigma_k) \right)$$
             </div>
             
-            <p>Let's break this one down too:</p>
+            <p>Key difference from MSE: MSE penalizes distance from all targets. NLL rewards being close to any valid mode. So if your data has three branches, the model learns three Gaussians, not their average. This is the core fix.</p>
 
             <div class="code-breakdown">
-                <div class="code-breakdown-header">
-                    <div class="dots">
-                        <div class="dot red"></div>
-                        <div class="dot yellow"></div>
-                        <div class="dot green"></div>
-                    </div>
-                    <span class="title">loss.py: the training objective</span>
-                </div>
-<pre><span class="comment"># The formula: L = -(1/N) Σᵢ log( Σₖ πₖ · N(xᵢ|μₖ,σₖ) )</span>
-<span class="comment"># Translation: "average negative log probability of the data"</span>
-
-<span class="keyword">def</span> <span class="function">mdn_loss</span>(<span class="variable">x_data</span>, <span class="variable">y_data</span>, <span class="variable">network</span>):
+                <div class="code-breakdown-header"><span class="title">loss.py</span><span class="lang">python</span></div>
+<pre><span class="keyword">def</span> <span class="function">mdn_loss</span>(<span class="variable">x_data</span>, <span class="variable">y_data</span>, <span class="variable">network</span>):
     <span class="variable">total_loss</span> = <span class="number">0</span>
-    
-<span class="highlight-line">    <span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="function">range</span>(<span class="variable">N</span>):  <span class="comment"># Loop over all data points</span></span>
-<span class="highlight-line">        <span class="variable">x</span>, <span class="variable">y</span> = <span class="variable">x_data</span>[<span class="variable">i</span>], <span class="variable">y_data</span>[<span class="variable">i</span>]</span>
-<span class="highlight-line">        </span>
-<span class="highlight-line">        <span class="comment"># Get probability of this x under our mixture</span></span>
-<span class="highlight-line">        <span class="variable">prob</span> = <span class="function">gmm_probability</span>(<span class="variable">x</span>, <span class="variable">y</span>, <span class="variable">network</span>)</span>
-<span class="highlight-line">        </span>
-<span class="highlight-line">        <span class="comment"># Add negative log probability</span></span>
-<span class="highlight-line">        <span class="variable">total_loss</span> += -<span class="function">log</span>(<span class="variable">prob</span>)</span>
-    
-    <span class="keyword">return</span> <span class="variable">total_loss</span> / <span class="variable">N</span>  <span class="comment"># Average over all points</span>
-
-<span class="comment"># Why negative log?</span>
-<span class="comment"># - High probability → log is less negative → low loss ✓</span>
-<span class="comment"># - Low probability  → log is very negative → high loss ✗</span>
-<span class="comment"># We want high probability, so we minimize negative log probability.</span></pre>
+<span class="highlight-line">    <span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="function">range</span>(<span class="variable">N</span>):</span>
+<span class="highlight-line">        <span class="variable">prob</span> = <span class="function">gmm_probability</span>(<span class="variable">x_data</span>[<span class="variable">i</span>], <span class="variable">y_data</span>[<span class="variable">i</span>], <span class="variable">network</span>)</span>
+<span class="highlight-line">        <span class="variable">total_loss</span> += -<span class="function">log</span>(<span class="variable">prob</span>)  <span class="comment"># Negative log probability</span></span>
+    <span class="keyword">return</span> <span class="variable">total_loss</span> / <span class="variable">N</span></pre>
             </div>
 
             <div class="callout blue">
-                <div class="callout-title">Why This Loss Works for Multi-Modal Data</div>
-                <p style="margin-bottom: 0;">MSE punishes you for being far from <em>all</em> targets. NLL only cares that <em>some</em> Gaussian covers each point. If your data has 3 branches, the network learns to put one Gaussian on each branch, instead of averaging them into mush.</p>
+                <div class="callout-title">The Core Fix</div>
+                <p style="margin-bottom: 0;">MSE punishes you for being far from all targets. NLL only cares that some Gaussian covers each point. If your data has 3 branches, the network learns to put one Gaussian on each branch, not their average.</p>
             </div>
 
             <div class="visualization">
@@ -657,41 +588,23 @@
             </div>
 
             <div class="callout success">
-                <div class="callout-title">Success!</div>
-                <p style="margin-bottom: 0;">The MDN learns to place Gaussian components on each branch. The density heatmap shows probability mass where data actually exists. Samples from the distribution land on the true data manifold, not in empty space between branches.</p>
+                <div class="callout-title">Result</div>
+                <p style="margin-bottom: 0;">Each Gaussian locks onto a different inverse branch. Mixing weights adapt smoothly across input space. Sampling produces valid solutions, not averages. The model is no longer forced to lie.</p>
             </div>
 
-            <h3>Sampling from the MDN</h3>
-            <p>Once trained, generating predictions is simple. Just sample from the mixture:</p>
+            <h3>Sampling Is Not an Afterthought</h3>
+            <p>MDNs give you a distribution, not a number. How you consume that distribution is a downstream choice:</p>
 
             <div class="code-breakdown">
-                <div class="code-breakdown-header">
-                    <div class="dots">
-                        <div class="dot red"></div>
-                        <div class="dot yellow"></div>
-                        <div class="dot green"></div>
-                    </div>
-                    <span class="title">sample.py: generating predictions</span>
-                </div>
+                <div class="code-breakdown-header"><span class="title">sample.py</span><span class="lang">python</span></div>
 <pre><span class="keyword">def</span> <span class="function">sample_from_mdn</span>(<span class="variable">y</span>, <span class="variable">network</span>):
-    <span class="comment"># Get mixture parameters for this input</span>
     <span class="variable">pi</span>, <span class="variable">mu</span>, <span class="variable">sigma</span> = <span class="variable">network</span>.<span class="function">forward</span>(<span class="variable">y</span>)
-    
-<span class="highlight-line">    <span class="comment"># Step 1: Pick which Gaussian to sample from</span></span>
-<span class="highlight-line">    <span class="variable">k</span> = <span class="function">random_choice</span>([<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>], <span class="variable">weights</span>=<span class="variable">pi</span>)  <span class="comment"># e.g., pi=[0.2, 0.5, 0.3]</span></span>
-    
-<span class="highlight-line">    <span class="comment"># Step 2: Sample from that Gaussian</span></span>
-<span class="highlight-line">    <span class="variable">x</span> = <span class="function">random_normal</span>(<span class="variable">mean</span>=<span class="variable">mu</span>[<span class="variable">k</span>], <span class="variable">std</span>=<span class="variable">sigma</span>[<span class="variable">k</span>])</span>
-    
-    <span class="keyword">return</span> <span class="variable">x</span>
-
-<span class="comment"># That's it! Two lines of actual logic.</span>
-<span class="comment"># The magic is that the network learns WHERE to put</span>
-<span class="comment"># each Gaussian based on the input y.</span></pre>
+<span class="highlight-line">    <span class="variable">k</span> = <span class="function">random_choice</span>([<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>], <span class="variable">weights</span>=<span class="variable">pi</span>)  <span class="comment"># Pick a component</span></span>
+<span class="highlight-line">    <span class="keyword">return</span> <span class="function">random_normal</span>(<span class="variable">mu</span>[<span class="variable">k</span>], <span class="variable">sigma</span>[<span class="variable">k</span>])        <span class="comment"># Sample from it</span></span></pre>
             </div>
 
             <h2>Component Analysis</h2>
-            <p>Move the slider to see how the mixture components adapt across input space. In the multi-modal region, multiple components are active; at the edges, one dominates.</p>
+            <p>Move the slider to see how the mixture components adapt across input space. In the multi-modal region, multiple components are active. At the edges, one dominates.</p>
 
             <div class="visualization">
                 <div class="viz-header">
@@ -713,32 +626,22 @@
                 </div>
             </div>
 
-            <h2>Key Takeaways</h2>
+            <h2>The Takeaway</h2>
             
             <div class="code-breakdown">
-                <div class="code-breakdown-header">
-                    <div class="dots">
-                        <div class="dot red"></div>
-                        <div class="dot yellow"></div>
-                        <div class="dot green"></div>
-                    </div>
-                    <span class="title">tldr.py: the whole thing in a nutshell</span>
-                </div>
+                <div class="code-breakdown-header"><span class="title">tldr.py</span><span class="lang">python</span></div>
 <pre><span class="comment"># Standard regression</span>
 <span class="variable">y_pred</span> = <span class="variable">network</span>(<span class="variable">x</span>)              <span class="comment"># One output</span>
-<span class="variable">loss</span>   = <span class="function">mean</span>((<span class="variable">y_pred</span> - <span class="variable">y</span>)**<span class="number">2</span>)   <span class="comment"># MSE - assumes one right answer</span>
-
+<span class="variable">loss</span>   = <span class="function">mean</span>((<span class="variable">y_pred</span> - <span class="variable">y</span>)**<span class="number">2</span>)   <span class="comment"># MSE: assumes one right answer</span>
 <span class="comment"># MDN regression</span>
 <span class="variable">pi</span>, <span class="variable">mu</span>, <span class="variable">sigma</span> = <span class="variable">network</span>(<span class="variable">x</span>)       <span class="comment"># Multiple Gaussians</span>
-<span class="variable">loss</span> = -<span class="function">mean</span>(<span class="function">log</span>(<span class="function">gmm_prob</span>(<span class="variable">y</span>)))   <span class="comment"># NLL - any Gaussian can cover the data</span>
-
-<span class="comment"># When to use MDN?</span>
-<span class="comment"># → When one input can have MULTIPLE valid outputs</span>
-<span class="comment"># → Inverse problems, multi-modal data, uncertainty estimation</span></pre>
+<span class="variable">loss</span> = -<span class="function">mean</span>(<span class="function">log</span>(<span class="function">gmm_prob</span>(<span class="variable">y</span>)))   <span class="comment"># NLL: allows many truths</span>
+<span class="comment"># Use MDNs when one input → multiple valid outputs</span>
+<span class="comment"># Do not use if unimodal. Adds complexity without benefit.</span></pre>
             </div>
         </article>
 
-        <footer><p>Neural networks implemented in vanilla JavaScript. No frameworks, no dependencies. Just math turned into code. Inspired by Bishop's <em>Pattern Recognition and Machine Learning</em> and Mike Dusenberry's MDN tutorial.</p></footer>
+        <footer><p>Neural networks implemented in vanilla JavaScript. No frameworks. Inspired by Bishop's <em>Pattern Recognition and Machine Learning</em> and Mike Dusenberry's MDN tutorial.</p></footer>
     </div>
 
 <script>
